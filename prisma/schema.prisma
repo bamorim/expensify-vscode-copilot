@@ -20,7 +20,20 @@ model Organization {
     createdBy   User     @relation("CreatedOrganizations", fields: [createdById], references: [id])
     memberships Membership[]
     invitations Invitation[]
+    categories  Category[]
     @@index([name])
+}
+
+model Category {
+    id             String   @id @default(cuid())
+    name           String
+    description    String?
+    organizationId String
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    @@unique([name, organizationId])
+    @@index([organizationId])
 }
 
 model Membership {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import { CategoryManagement } from "./category-management";
 
 interface OrganizationDashboardProps {
   organization: {
@@ -142,8 +143,16 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
           </div>
         </div>
 
-        {/* Members Section */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        {/* Content Sections */}
+        <div className="space-y-8">
+          {/* Categories Section */}
+          <CategoryManagement 
+            organizationId={organization.id}
+            isAdmin={isAdmin}
+          />
+
+          {/* Members and Invitations Grid */}
+          <div className="grid gap-6 lg:grid-cols-2">
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Members</h2>
@@ -283,6 +292,7 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
