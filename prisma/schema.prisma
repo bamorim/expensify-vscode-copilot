@@ -10,16 +10,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
+model Organization {
+    id          String   @id @default(cuid())
+    name        String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
     createdById String
-
+    createdBy   User     @relation("CreatedOrganizations", fields: [createdById], references: [id])
+    memberships Membership[]
+    invitations Invitation[]
     @@index([name])
+}
+
+model Membership {
+    id             String   @id @default(cuid())
+    userId         String
+    organizationId String
+    role           Role
+    joinedAt       DateTime @default(now())
+    user           User     @relation(fields: [userId], references: [id])
+    organization   Organization @relation(fields: [organizationId], references: [id])
+    @@unique([userId, organizationId])
+}
+
+model Invitation {
+    id             String   @id @default(cuid())
+    email          String
+    organizationId String
+    invitedById    String
+    createdAt      DateTime @default(now())
+    acceptedAt     DateTime?
+    expiresAt      DateTime?
+    revokedAt      DateTime?
+    organization   Organization @relation(fields: [organizationId], references: [id])
+    invitedBy      User     @relation("SentInvitations", fields: [invitedById], references: [id])
+    @@index([email])
+}
+
+enum Role {
+    ADMIN
+    MEMBER
 }
 
 // Necessary for Next auth
@@ -58,7 +89,9 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    memberships   Membership[]
+    createdOrganizations Organization[] @relation("CreatedOrganizations")
+    sentInvitations Invitation[] @relation("SentInvitations")
 }
 
 model VerificationToken {

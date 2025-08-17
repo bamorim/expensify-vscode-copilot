@@ -37,8 +37,9 @@ src/server/
 │   ├── root.ts              # Main tRPC router
 │   ├── trpc.ts              # tRPC configuration and middleware
 │   └── routers/             # Domain-specific routers with business logic
-│       ├── post.ts          # Post-related procedures and logic
-│       └── [other-routers]/
+│       ├── post.ts          # Reference example of tRPC router pattern
+│       ├── post.test.ts     # Reference example of transactional testing
+│       └── [other-routers]/ # Domain routers (organization, invitation, etc.)
 ├── auth/                    # NextAuth configuration
 │   ├── index.ts            # Auth exports
 │   └── config.ts           # Auth configuration
@@ -82,7 +83,7 @@ const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 Business logic is organized directly within tRPC routers, keeping the architecture simple and focused:
 
 ```typescript
-// src/server/api/routers/post.ts
+// src/server/api/routers/post.ts - Reference example
 export const postRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
     // Business logic directly in the router
@@ -158,6 +159,7 @@ afterEach(() => {
 For integration testing with real database operations:
 
 ```typescript
+// src/server/api/routers/post.test.ts - Reference example
 import { describe, it, expect } from "vitest";
 import { createCaller } from "~/server/api/root";
 import { db } from "~/server/db/__mocks__";
