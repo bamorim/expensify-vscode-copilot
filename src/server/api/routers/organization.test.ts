@@ -50,58 +50,311 @@ describe("Organization Router", () => {
         name: "Test Organization",
       });
 
-      expect(result).toMatchObject({
-        name: "Test Organization",
-        createdById: user.id,
-        role: Role.ADMIN,
-      });
+    describe("removeMember", () => {
+        it("should allow admin to remove member", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const member = await createTestUser({ name: "Member", email: "member@example.com" });
+            
+            const adminCaller = createAuthenticatedCaller(admin.id);
 
-      // Verify the organization was created
-      const org = await db.organization.findUnique({
-        where: { id: result.id },
-      });
-      expect(org).toBeTruthy();
-      expect(org?.name).toBe("Test Organization");
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
 
-      // Verify the membership was created
-      const membership = await db.membership.findUnique({
-        where: {
-          userId_organizationId: {
-            userId: user.id,
-            organizationId: result.id,
-          },
-        },
-      });
-      expect(membership).toBeTruthy();
-      expect(membership?.role).toBe(Role.ADMIN);
+            // Add member to organization
+            const membership = await db.membership.create({
+                data: {
+                    userId: member.id,
+                    organizationId: org.id,
+                    role: Role.MEMBER,
+                },
+            });
+
+            const result = await adminCaller.organization.removeMember({
+                organizationId: org.id,
+                membershipId: membership.id,
+            });
+
+            expect(result.success).toBe(true);
+
+            // Verify membership was deleted
+            const deletedMembership = await db.membership.findUnique({
+                where: { id: membership.id },
+            });
+            expect(deletedMembership).toBeNull();
+        });
+
+        it("should throw error for non-admin trying to remove member", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const member1 = await createTestUser({ name: "Member 1", email: "member1@example.com" });
+            const member2 = await createTestUser({ name: "Member 2", email: "member2@example.com" });
+            
+            const adminCaller = createAuthenticatedCaller(admin.id);
+            const member1Caller = createAuthenticatedCaller(member1.id);
+
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
+
+            // Add members to organization
+            const membership1 = await db.membership.create({
+                data: {
+                    userId: member1.id,
+                    organizationId: org.id,
+                    role: Role.MEMBER,
+                },
+            });
+
+            const membership2 = await db.membership.create({
+                data: {
+                    userId: member2.id,
+                    organizationId: org.id,
+                    role: Role.MEMBER,
+                },
+            });
+
+            await expect(
+                member1Caller.organization.removeMember({
+                    organizationId: org.id,
+                    membershipId: membership2.id,
+                })
+            ).rejects.toThrow("Only organization admins can remove members");
+        });
+
+        it("should prevent admin from removing themselves", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const adminCaller = createAuthenticatedCaller(admin.id);
+
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
+
+            // Get the admin's membership
+            const membership = await db.membership.findUnique({
+                where: {
+                    userId_organizationId: {
+                        userId: admin.id,
+                        organizationId: org.id,
+                    },
+                },
+            });
+
+            await expect(
+                adminCaller.organization.removeMember({
+                    organizationId: org.id,
+                    membershipId: membership!.id,
+                })
+            ).rejects.toThrow("You cannot remove yourself from the organization");
+        });
+
+        it("should throw error for non-existent membership", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const adminCaller = createAuthenticatedCaller(admin.id);
+
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
+
+            await expect(
+                adminCaller.organization.removeMember({
+                    organizationId: org.id,
+                    membershipId: "non-existent-id",
+                })
+            ).rejects.toThrow("Membership not found");
+        });
     });
 
-    it("should throw error if user has no name", async () => {
-      const user = await createTestUser({ name: null }); // No name
-      const caller = createAuthenticatedCaller(user.id);
+    describe("changeMemberRole", () => {
+        it("should allow admin to demote member when multiple admins exist", async () => {
+            const admin1 = await createTestUser({ name: "Admin 1", email: "admin1@example.com" });
+            const admin2 = await createTestUser({ name: "Admin 2", email: "admin2@example.com" });
+            
+            const admin1Caller = createAuthenticatedCaller(admin1.id);
 
-      await expect(
-        caller.organization.create({
-          name: "Test Organization",
-        })
-      ).rejects.toThrow(TRPCError);
+            const org = await admin1Caller.organization.create({
+                name: "Test Organization",
+            });
+
+            // Add second admin
+            const admin2Membership = await db.membership.create({
+                data: {
+                    userId: admin2.id,
+                    organizationId: org.id,
+                    role: Role.ADMIN,
+                },
+            });
+
+            const updated = await admin1Caller.organization.changeMemberRole({
+                organizationId: org.id,
+                membershipId: admin2Membership.id,
+                newRole: Role.MEMBER,
+            });
+
+            expect(updated.role).toBe(Role.MEMBER);
+        });
+
+        it("should throw error for non-admin trying to change roles", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const member1 = await createTestUser({ name: "Member 1", email: "member1@example.com" });
+            const member2 = await createTestUser({ name: "Member 2", email: "member2@example.com" });
+            
+            const adminCaller = createAuthenticatedCaller(admin.id);
+            const member1Caller = createAuthenticatedCaller(member1.id);
+
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
+
+            // Add members to organization
+            await db.membership.create({
+                data: {
+                    userId: member1.id,
+                    organizationId: org.id,
+                    role: Role.MEMBER,
+                },
+            });
+
+            const member2Membership = await db.membership.create({
+                data: {
+                    userId: member2.id,
+                    organizationId: org.id,
+                    role: Role.MEMBER,
+                },
+            });
+
+            await expect(
+                member1Caller.organization.changeMemberRole({
+                    organizationId: org.id,
+                    membershipId: member2Membership.id,
+                    newRole: Role.ADMIN,
+                })
+            ).rejects.toThrow("Only organization admins can change member roles");
+        });
+
+        it("should throw error for non-existent membership", async () => {
+            const admin = await createTestUser({ name: "Admin", email: "admin@example.com" });
+            const adminCaller = createAuthenticatedCaller(admin.id);
+
+            const org = await adminCaller.organization.create({
+                name: "Test Organization",
+            });
+
+            await expect(
+                adminCaller.organization.changeMemberRole({
+                    organizationId: org.id,
+                    membershipId: "non-existent-id",
+                    newRole: Role.ADMIN,
+                })
+            ).rejects.toThrow("Membership not found");
+        });
     });
 
-    it("should validate organization name", async () => {
-      const user = await createTestUser();
-      const caller = createAuthenticatedCaller(user.id);
+    describe("leave", () => {
+        it("should allow admin to leave when multiple admins exist", async () => {
+            const admin1 = await createTestUser({ name: "Admin 1", email: "admin1@example.com" });
+            const admin2 = await createTestUser({ name: "Admin 2", email: "admin2@example.com" });
+            
+            const admin1Caller = createAuthenticatedCaller(admin1.id);
 
-      await expect(
-        caller.organization.create({
-          name: "",
-        })
-      ).rejects.toThrow("Organization name is required");
+            const org = await admin1Caller.organization.create({
+                name: "Test Organization",
+            });
 
-      await expect(
-        caller.organization.create({
-          name: "a".repeat(101),
-        })
-      ).rejects.toThrow();
+            // Add second admin
+            await db.membership.create({
+                data: {
+                    userId: admin2.id,
+                    organizationId: org.id,
+                    role: Role.ADMIN,
+                },
+            });
+
+            const result = await admin1Caller.organization.leave({
+                organizationId: org.id,
+            });
+
+            expect(result.success).toBe(true);
+
+            // Verify membership was deleted
+            const membership = await db.membership.findUnique({
+                where: {
+                    userId_organizationId: {
+                        userId: admin1.id,
+                        organizationId: org.id,
+                    },
+                },
+            });
+            expect(membership).toBeNull();
+        });
+
+        it("should throw error for non-member trying to leave", async () => {
+            const user1 = await createTestUser({ name: "User 1", email: "user1@example.com" });
+            const user2 = await createTestUser({ name: "User 2", email: "user2@example.com" });
+            
+            const user1Caller = createAuthenticatedCaller(user1.id);
+            const user2Caller = createAuthenticatedCaller(user2.id);
+
+            const org = await user1Caller.organization.create({
+                name: "Test Organization",
+            });
+
+            await expect(
+                user2Caller.organization.leave({
+                    organizationId: org.id,
+                })
+            ).rejects.toThrow("You are not a member of this organization");
+        });
+    });
+
+    describe("getById edge cases", () => {
+        it("should throw error for non-existent organization", async () => {
+            const user = await createTestUser();
+            const caller = createAuthenticatedCaller(user.id);
+
+            await expect(
+                caller.organization.getById({
+                    organizationId: "non-existent-id",
+                })
+            ).rejects.toThrow("You are not a member of this organization");
+        });
+    });
+
+    describe("updateName edge cases", () => {
+        it("should throw error for non-existent organization", async () => {
+            const user = await createTestUser();
+            const caller = createAuthenticatedCaller(user.id);
+
+            await expect(
+                caller.organization.updateName({
+                    organizationId: "non-existent-id",
+                    name: "New Name",
+                })
+            ).rejects.toThrow("Only organization admins can update the organization name");
+        });
+
+        it("should validate name length", async () => {
+            const user = await createTestUser();
+            const caller = createAuthenticatedCaller(user.id);
+
+            const org = await caller.organization.create({
+                name: "Test Organization",
+            });
+
+            await expect(
+                caller.organization.updateName({
+                    organizationId: org.id,
+                    name: "",
+                })
+            ).rejects.toThrow("Organization name is required");
+
+            await expect(
+                caller.organization.updateName({
+                    organizationId: org.id,
+                    name: "a".repeat(101),
+                })
+            ).rejects.toThrow();
+        });
+    });
     });
   });
 

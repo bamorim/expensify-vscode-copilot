@@ -4,7 +4,7 @@
 ## Meta Information
 - **Task ID**: TASK-001
 - **Title**: User & Organization Management (Auth, Org Creation, Invitations, Roles, Membership, Data Isolation)
-- **Status**: Not Started
+- **Status**: In Progress
 - **Priority**: P0
 - **Created**: 2025-08-17
 - **Updated**: 2025-08-17

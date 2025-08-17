@@ -34,18 +34,18 @@ The application uses tRPC to create a type-safe interface between client and ser
 ```
 src/server/
 ├── api/
-│   ├── root.ts              # Main tRPC router
-│   ├── trpc.ts              # tRPC configuration and middleware
-│   └── routers/             # Domain-specific routers with business logic
-│       ├── post.ts          # Reference example of tRPC router pattern
-│       ├── post.test.ts     # Reference example of transactional testing
-│       └── [other-routers]/ # Domain routers (organization, invitation, etc.)
-├── auth/                    # NextAuth configuration
-│   ├── index.ts            # Auth exports
-│   └── config.ts           # Auth configuration
-├── db/                     # Database configuration
-│   ├── index.ts            # Prisma client
-│   └── __mocks__/          # Test database mocks
+│   ├── root.ts                    # Main tRPC router
+│   ├── trpc.ts                    # tRPC configuration and middleware
+│   └── routers/                   # Domain-specific routers with business logic
+│       ├── organization.ts        # Reference example of tRPC router pattern
+│       ├── organization.test.ts   # Reference example of transactional testing
+│       └── [other-routers]/       # Domain routers (organization, invitation, etc.)
+├── auth/                          # NextAuth configuration
+│   ├── index.ts                   # Auth exports
+│   └── config.ts                  # Auth configuration
+├── db/                            # Database configuration
+│   ├── index.ts                   # Prisma client
+│   └── __mocks__/                 # Test database mocks
 ```
 
 #### Client-Side Integration
