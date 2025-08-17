@@ -157,3 +157,10 @@ When making architectural decisions:
 - Ensure all tests pass and documentation is updated
 - Consider edge cases and error scenarios
 - Validate against project standards and requirements
+
+# Additional Resources
+
+- For comprehensive Prisma docs, see https://prisma.io/docs/llms.txt
+   - If you want the full picture, see https://www.prisma.io/docs/llms-full.txt
+- For NextJS docs, see https://nextjs.org/docs/llms.txt
+   - If you want the full picture, see https://www.nextjs.org/docs/llms-full.txt

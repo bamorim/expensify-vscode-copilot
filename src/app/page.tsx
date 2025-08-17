@@ -4,7 +4,18 @@ import { LatestPost } from "~/app/_components/post";
 import { auth } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
+export class Greeter {
+  constructor(private readonly greeting: string) {}
+
+  formatGreeting(name: string): string {
+    return `${this.greeting}, ${name}!`;
+  }
+}
+
 export default async function Home() {
+  const greeter = new Greeter("Hello");
+  const message = greeter.formatGreeting("World");
+  console.log(message);
   const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
