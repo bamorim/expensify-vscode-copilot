@@ -49,6 +49,18 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
     },
   });
 
+  const revokeInvitation = api.invitation.revoke.useMutation({
+    onSuccess: async () => {
+      await utils.invitation.getForOrganization.invalidate();
+    },
+  });
+
+  const resendInvitation = api.invitation.resend.useMutation({
+    onSuccess: async () => {
+      await utils.invitation.getForOrganization.invalidate();
+    },
+  });
+
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -63,6 +75,22 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
       console.error("Failed to send invitation:", error);
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleRevokeInvitation = async (invitationId: string) => {
+    try {
+      await revokeInvitation.mutateAsync({ invitationId });
+    } catch (error) {
+      console.error("Failed to revoke invitation:", error);
+    }
+  };
+
+  const handleResendInvitation = async (invitationId: string) => {
+    try {
+      await resendInvitation.mutateAsync({ invitationId });
+    } catch (error) {
+      console.error("Failed to resend invitation:", error);
     }
   };
 
@@ -169,6 +197,22 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
               </div>
             )}
 
+            {/* Error Messages for Revoke/Resend */}
+            {(revokeInvitation.error || resendInvitation.error) && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
+                {revokeInvitation.error && (
+                  <p className="text-red-300 text-sm">
+                    Failed to revoke: {revokeInvitation.error.message}
+                  </p>
+                )}
+                {resendInvitation.error && (
+                  <p className="text-red-300 text-sm">
+                    Failed to resend: {resendInvitation.error.message}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Members List */}
             <div className="space-y-3">
               {organization.members.map((member) => (
@@ -217,11 +261,19 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <button className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm font-medium transition-colors">
-                            Resend
+                          <button 
+                            onClick={() => handleResendInvitation(invitation.id)}
+                            disabled={resendInvitation.isPending}
+                            className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-3 py-1 rounded text-sm font-medium transition-colors"
+                          >
+                            {resendInvitation.isPending ? "Resending..." : "Resend"}
                           </button>
-                          <button className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm font-medium transition-colors">
-                            Revoke
+                          <button 
+                            onClick={() => handleRevokeInvitation(invitation.id)}
+                            disabled={revokeInvitation.isPending}
+                            className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-3 py-1 rounded text-sm font-medium transition-colors"
+                          >
+                            {revokeInvitation.isPending ? "Revoking..." : "Revoke"}
                           </button>
                         </div>
                       </div>
