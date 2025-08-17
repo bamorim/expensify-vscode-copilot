@@ -61,12 +61,12 @@ export function Dashboard() {
             <p className="text-white/80 mt-1">Manage your organizations and expenses</p>
           </div>
           <div className="flex items-center gap-4">
-            <a
+            <Link
               href="/api/auth/signout"
               className="text-white/80 hover:text-white transition-colors"
             >
               Sign out
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export function Dashboard() {
                   <div>
                     <p className="font-medium">{invitation.organization.name}</p>
                     <p className="text-sm text-white/60">
-                      Invited by {invitation.invitedBy.name || invitation.invitedBy.email}
+                      Invited by {invitation.invitedBy.name ?? invitation.invitedBy.email}
                     </p>
                   </div>
                   <div className="flex gap-2">

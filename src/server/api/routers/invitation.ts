@@ -196,12 +196,15 @@ export const invitationRouter = createTRPCRouter({
         include: {
           organization: {
             select: {
+              id: true,
               name: true,
             },
           },
           invitedBy: {
             select: {
+              id: true,
               name: true,
+              email: true,
             },
           },
         },

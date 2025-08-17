@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { api } from "~/trpc/server";
-import { InvitationAcceptance } from "../../_components/invitation-acceptance";
+import { InvitationAcceptance } from "~/app/_components/invitation-acceptance";
+import { TRPCError } from "@trpc/server";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -26,8 +27,14 @@ export default async function InvitationPage({ params }: Props) {
   try {
     const invitation = await api.invitation.getById({ invitationId: token });
     return <InvitationAcceptance invitation={invitation} />;
-  } catch (error) {
-    // If invitation doesn't exist or is invalid, show 404
-    notFound();
+  } catch (error: unknown) {
+    if (error instanceof TRPCError) {
+      // Handle specific TRPC errors
+      if (error.code === "NOT_FOUND") {
+        return notFound();
+      }
+    }
+
+    throw error; // Re-throw other errors
   }
 }

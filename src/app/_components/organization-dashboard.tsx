@@ -18,7 +18,7 @@ interface OrganizationDashboardProps {
       user: {
         id: string;
         name: string | null;
-        email: string;
+        email: string | null;
       };
     }>;
   };
@@ -198,7 +198,7 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
             )}
 
             {/* Error Messages for Revoke/Resend */}
-            {(revokeInvitation.error || resendInvitation.error) && (
+            {(revokeInvitation.error !== null || resendInvitation.error !== null) && (
               <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
                 {revokeInvitation.error && (
                   <p className="text-red-300 text-sm">
@@ -219,7 +219,7 @@ export function OrganizationDashboard({ organization }: OrganizationDashboardPro
                 <div key={member.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium">{member.user.name || member.user.email}</p>
+                      <p className="font-medium">{member.user.name ?? member.user.email}</p>
                       <p className="text-sm text-white/60">{member.user.email}</p>
                       <p className="text-xs text-white/50">
                         Joined {new Date(member.joinedAt).toLocaleDateString()}

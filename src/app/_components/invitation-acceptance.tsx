@@ -19,7 +19,7 @@ interface InvitationAcceptanceProps {
     invitedBy: {
       id: string;
       name: string | null;
-      email: string;
+      email: string | null;
     };
   };
 }
@@ -52,7 +52,7 @@ export function InvitationAcceptance({ invitation }: InvitationAcceptanceProps) 
   };
 
   // Check if invitation is still valid
-  const isExpired = invitation.expiresAt && new Date() > new Date(invitation.expiresAt);
+  const isExpired = invitation.expiresAt ? new Date() > new Date(invitation.expiresAt) : false;
   const isRevoked = !!invitation.revokedAt;
   const isAccepted = !!invitation.acceptedAt;
   const isInvalid = isExpired || isRevoked || isAccepted;
@@ -74,7 +74,7 @@ export function InvitationAcceptance({ invitation }: InvitationAcceptanceProps) 
           ) : (
             <div className="bg-white/10 rounded-lg p-6 mb-6">
               <p className="text-white/80 mb-4">
-                <strong>{invitation.invitedBy.name || invitation.invitedBy.email}</strong> has invited you to join:
+                <strong>{invitation.invitedBy.name ?? invitation.invitedBy.email}</strong> has invited you to join:
               </p>
               <h2 className="text-2xl font-bold text-white mb-4">{invitation.organization.name}</h2>
               <div className="text-white/60 text-sm space-y-1">

@@ -17,7 +17,7 @@ export function OnboardingForm() {
       await utils.user.needsOnboarding.invalidate();
       await utils.user.getProfile.invalidate();
       // Redirect to callback URL if provided, otherwise go to dashboard
-      router.push(callbackUrl || "/");
+      router.push(callbackUrl ?? "/");
     },
   });
 
@@ -41,7 +41,7 @@ export function OnboardingForm() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Welcome!</h1>
           <p className="text-white/80">
-            Let's get started by setting up your profile
+            Let&apos;s get started by setting up your profile
           </p>
         </div>
 

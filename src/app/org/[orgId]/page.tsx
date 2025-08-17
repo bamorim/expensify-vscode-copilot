@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { api } from "~/trpc/server";
-import { OrganizationDashboard } from "../../_components/organization-dashboard";
+import { OrganizationDashboard } from "~/app/_components/organization-dashboard";
+import { TRPCError } from "@trpc/server";
 
 interface Props {
   params: Promise<{ orgId: string }>;
@@ -26,8 +27,13 @@ export default async function OrganizationPage({ params }: Props) {
   try {
     const organization = await api.organization.getById({ organizationId: orgId });
     return <OrganizationDashboard organization={organization} />;
-  } catch (error) {
-    // If user doesn't have access or org doesn't exist, show 404
-    notFound();
+  } catch (error: unknown) {
+    if (error instanceof TRPCError) {
+      if (error.code === "NOT_FOUND") {
+        return notFound();
+      }
+    }
+
+    throw error; // Re-throw other errors
   }
 }

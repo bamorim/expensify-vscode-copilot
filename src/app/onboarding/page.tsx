@@ -23,7 +23,7 @@ export default async function OnboardingPage({ searchParams }: Props) {
   
   // If user has completed onboarding, redirect appropriately
   if (!needsOnboarding) {
-    redirect(params.callbackUrl || "/");
+    redirect(params.callbackUrl ?? "/");
   }
 
   return (

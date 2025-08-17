@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from "vitest";
-import { TRPCError } from "@trpc/server";
 import { createCaller } from "~/server/api/root";
 import { db } from "~/server/db/__mocks__";
 import { Role } from "@prisma/client";
