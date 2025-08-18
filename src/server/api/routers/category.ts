@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 export const categoryRouter = createTRPCRouter({
   // Get all categories for an organization
@@ -65,8 +66,8 @@ export const categoryRouter = createTRPCRouter({
             organizationId: input.organizationId,
           },
         });
-      } catch (error: any) {
-        if (error.code === "P2002") {
+      } catch (error: unknown) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
           throw new TRPCError({
             code: "CONFLICT",
             message: "A category with this name already exists",
@@ -123,8 +124,8 @@ export const categoryRouter = createTRPCRouter({
             ...(input.description !== undefined && { description: input.description }),
           },
         });
-      } catch (error: any) {
-        if (error.code === "P2002") {
+      } catch (error: unknown) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
           throw new TRPCError({
             code: "CONFLICT",
             message: "A category with this name already exists",

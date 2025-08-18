@@ -74,7 +74,7 @@ export function CategoryManagement({ organizationId, isAdmin }: CategoryManageme
   const startEditing = (category: { id: string; name: string; description: string | null }) => {
     setEditingCategory(category.id);
     setNewCategoryName(category.name);
-    setNewCategoryDescription(category.description || "");
+    setNewCategoryDescription(category.description ?? "");
   };
 
   const cancelEditing = () => {

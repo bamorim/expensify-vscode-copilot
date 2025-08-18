@@ -66,7 +66,7 @@ describe("Category Router", () => {
       await createMembership(user.id, organization.id, Role.MEMBER);
       
       // Create some categories
-      const category1 = await db.category.create({
+      await db.category.create({
         data: {
           name: "Travel",
           description: "Travel expenses",
@@ -74,7 +74,7 @@ describe("Category Router", () => {
         },
       });
 
-      const category2 = await db.category.create({
+      await db.category.create({
         data: {
           name: "Meals",
           organizationId: organization.id,
